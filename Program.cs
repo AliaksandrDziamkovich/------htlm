@@ -2,53 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System.IO;
-using System.Net;
 
-namespace ConsoleApp30
+namespace ConsoleApp32
 {
+
     class Program
     {
+
         static void Main(string[] args)
         {
-            string text = GetCode("http://tut.by/");
-            Console.WriteLine(text);
-            Console.Read();
+            Task t = new Task(DownloadPageAsync);
+            t.Start();
+            Console.WriteLine("Downloading page...");
+            Console.ReadLine();
         }
-        public static String GetCode(string urlAddress)
+
+        static async void DownloadPageAsync()
         {
-            string data = "";
+            // ... Target page.
+            string page = "http://tut.by/";
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(urlAddress);
-
-            Cookie cookie = new Cookie
+            // ... Use HttpClient.
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(page))
+            using (HttpContent content = response.Content)
             {
-                Name = "beget",
-                Value = "begetok"
-            };
+                // ... Read the string.
+                string result = await content.ReadAsStringAsync();
 
-            request.CookieContainer = new CookieContainer();
-            request.CookieContainer.Add(new Uri(urlAddress), cookie);
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Stream receiveStream = response.GetResponseStream();
-                StreamReader readStream = null;
-                if (response.CharacterSet == null)
-                {
-                    readStream = new StreamReader(receiveStream);
-                }
-                else
-                {
-                    readStream = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
-                }
-                data = readStream.ReadToEnd();
-                response.Close();
-                readStream.Close();
+                    Console.WriteLine(result);
             }
-            return data;
         }
     }
-}
+}   
+
